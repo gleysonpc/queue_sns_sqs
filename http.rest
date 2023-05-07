@@ -1,0 +1,11 @@
+POST https://6hn7hs0om7.execute-api.us-east-1.amazonaws.com/dev/app
+Content-Type: application/json
+
+{
+    "name": "Isabel",
+    "email": "gleyson_10@hotmail.com"
+}
+
+###
+GET https://6hn7hs0om7.execute-api.us-east-1.amazonaws.com/dev/hello
+Content-Type: application/json

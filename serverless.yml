@@ -1,0 +1,54 @@
+# yarn sls deploy
+service: queuetest
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.9
+  stage: ${opt:stage, 'dev'}
+  iamRoleStatements:
+    - ${file(UsersTableIAM.yml):UsersTableIAM}
+    - ${file(UsersTopicIAM.yml):UsersTopicIAM}
+  environment:    
+    NEW_USERS_TOPIC_ARN: !ImportValue ${opt:stage, 'dev'}-newUsersTopic-Arn
+
+resources:
+  Resources:
+    UsersTable: ${file(UsersTable.yml):UsersTable}
+
+functions:
+  app:
+    handler: handler.run
+    events:
+      - http:
+          method: POST
+          path: /app
+  
+  hello:
+    handler: hello.run
+    events:
+      - http:
+          method: GET
+          path: /hello
+
+  # sns handler
+  users_notify:
+    handler: users_notify.run
+    events:
+      - sns:
+          arn: !ImportValue ${opt:stage, 'dev'}-newUsersTopic-Arn
+          topicName: 'newUsersTopic'
+
+  # sqs handler
+  process_new_users:
+    handler: process_new_users.run
+    events:
+      - sqs:
+          arn: !ImportValue ${opt:stage, 'dev'}-newUsersQueue-Arn
+
+custom:
+  UsersTable:
+    name: !Ref UsersTable
+    arn: !GetAtt UsersTable.Arn
+

@@ -1,0 +1,45 @@
+# yarn sls deploy --config UsersQueue.yml
+service: users-queue
+
+provider:
+  name: aws
+  deploymentPrefix: ${self:service}
+
+custom:
+  QueueName: newUsersQueue
+
+resources:
+  Resources:
+    Queue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.QueueName}
+    QueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - Ref: Queue
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - 
+              Action: 
+                - "SQS:SendMessage" 
+              Effect: "Allow"
+              Resource: !GetAtt Queue.Arn
+              Principal: "*"
+              Condition:
+                ArnEquals:
+                  aws:SourceArn:
+                    !ImportValue ${opt:stage, 'dev'}-newUsersTopic-Arn
+    SnsSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        Endpoint: !GetAtt Queue.Arn
+        TopicArn: !ImportValue ${opt:stage, 'dev'}-newUsersTopic-Arn
+  Outputs:
+    QueueArn:
+      Value: !GetAtt Queue.Arn
+      Export:
+        Name: ${opt:stage, 'dev'}-newUsersQueue-Arn

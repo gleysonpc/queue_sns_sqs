@@ -1,0 +1,21 @@
+# yarn sls deploy --config UsersTopic.yml
+service: users-topic
+
+provider:
+  name: aws
+  deploymentPrefix: ${self:service}
+
+custom:
+  TopicName: 'newUsersTopic'
+
+resources:
+  Resources:
+    Topic: 
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:custom.TopicName}
+  Outputs:
+    topicArn:
+      Value: !Ref Topic
+      Export:
+        Name: ${opt:stage, 'dev'}-newUsersTopic-Arn
