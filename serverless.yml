@@ -4,6 +4,31 @@ useDotenv: true
 
 frameworkVersion: '3'
 
+plugins:
+  - serverless-python-requirements
+
+custom:
+  UsersTable:
+    name: !Ref UsersTable
+    arn: !GetAtt UsersTable.Arn
+  pythonRequirements:
+    dockerizePip: true
+    layer: true
+    slim: true
+    strip: false
+    cacheLocation: ${env:PYREQ_CACHE_FOLDER, ''}
+    
+package:
+  exclude:      
+    - .vscode/**
+    - node_modules/**
+    - yarn.lock
+    - package.json
+    - "**/__pycache__/**"      
+    - tmp/**
+    - temp/**
+    - venv/**
+
 provider:
   name: aws
   runtime: python3.9
@@ -22,6 +47,8 @@ resources:
 functions:
   app:
     handler: handler.run
+    layers:
+      - { Ref: PythonRequirementsLambdaLayer }
     events:
       - http:
           method: POST
@@ -29,6 +56,8 @@ functions:
   
   hello:
     handler: hello.run
+    layers:
+      - { Ref: PythonRequirementsLambdaLayer }
     events:
       - http:
           method: GET
@@ -37,6 +66,8 @@ functions:
   # sns handler
   users_notify:
     handler: users_notify.run
+    layers:
+      - { Ref: PythonRequirementsLambdaLayer }
     events:
       - sns:
           arn: !ImportValue ${opt:stage, 'dev'}-newUsersTopic-Arn
@@ -45,11 +76,12 @@ functions:
   # sqs handler
   process_new_users:
     handler: process_new_users.run
+    layers:
+      - { Ref: PythonRequirementsLambdaLayer }
     events:
       - sqs:
           arn: !ImportValue ${opt:stage, 'dev'}-newUsersQueue-Arn
 
-custom:
-  UsersTable:
-    name: !Ref UsersTable
-    arn: !GetAtt UsersTable.Arn
+
+
+
