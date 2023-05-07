@@ -16,6 +16,7 @@ var/
 .installed.cfg
 *.egg
 .DS_Store
+.env
 node_modules/
 venv/
 

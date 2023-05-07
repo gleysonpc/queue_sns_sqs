@@ -1,5 +1,6 @@
 # yarn sls deploy
 service: queuetest
+useDotenv: true
 
 frameworkVersion: '3'
 
@@ -12,6 +13,7 @@ provider:
     - ${file(UsersTopicIAM.yml):UsersTopicIAM}
   environment:    
     NEW_USERS_TOPIC_ARN: !ImportValue ${opt:stage, 'dev'}-newUsersTopic-Arn
+    DB_USER: ${env:DB_USER}
 
 resources:
   Resources:
@@ -51,4 +53,3 @@ custom:
   UsersTable:
     name: !Ref UsersTable
     arn: !GetAtt UsersTable.Arn
-
